@@ -1,0 +1,74 @@
+[
+  {
+    "timestamp": "2026-02-24T13:00:58.852Z",
+    "download": 0,
+    "isp": "Unknown",
+    "status": "offline"
+  },
+  {
+    "timestamp": "2026-02-24T13:07:15.348Z",
+    "download": 0,
+    "isp": "Unknown",
+    "status": "offline"
+  },
+  {
+    "timestamp": "2026-02-24T13:18:25.885Z",
+    "download": 0,
+    "isp": "Unknown",
+    "status": "offline"
+  },
+  {
+    "timestamp": "2026-02-24T13:18:51.604Z",
+    "download": 0,
+    "isp": "Unknown",
+    "status": "offline"
+  },
+  {
+    "timestamp": "2026-02-24T13:20:58.877Z",
+    "download": 0,
+    "isp": "Unknown",
+    "status": "offline"
+  },
+  {
+    "timestamp": "2026-02-24T13:25:47.878Z",
+    "download": "0.36",
+    "isp": "Cloudflare Speedtest",
+    "status": "online"
+  },
+  {
+    "timestamp": "2026-02-24T13:26:08.273Z",
+    "download": "0.44",
+    "isp": "Cloudflare Speedtest",
+    "status": "online"
+  },
+  {
+    "timestamp": "2026-02-24T13:27:25.863Z",
+    "download": "2.53",
+    "isp": "Cloudflare Speedtest",
+    "status": "online"
+  },
+  {
+    "timestamp": "2026-02-24T13:30:07.568Z",
+    "download": 0,
+    "isp": "Unknown",
+    "status": "offline"
+  },
+  {
+    "timestamp": "2026-02-24T13:30:10.614Z",
+    "download": "1.78",
+    "isp": "Cloudflare Speedtest",
+    "status": "online"
+  },
+  {
+    "timestamp": "2026-02-24T13:30:13.992Z",
+    "download": 0,
+    "isp": "Unknown",
+    "status": "offline"
+  },
+  {
+    "timestamp": "2026-02-24T13:30:22.724Z",
+    "download": "1.77",
+    "isp": "Cloudflare Speedtest",
+    "status": "online"
+  }
+]

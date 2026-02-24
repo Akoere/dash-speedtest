@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed Monitor Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        h2 { color: #38bdf8; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Internet Speed History</h2>
+        <canvas id="speedChart"></canvas>
+    </div>
+
+    <script>
+        async function loadData() {
+            const response = await fetch('/api/history');
+            const data = await response.json();
+
+            // Format data for the chart
+            const labels = data.map(item => {
+                const date = new Date(item.timestamp);
+                return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+            });
+            const speeds = data.map(item => parseFloat(item.download));
+
+            // Draw the Chart
+            const ctx = document.getElementById('speedChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Download Speed (Mbps)',
+                        data: speeds,
+                        borderColor: '#38bdf8',
+                        backgroundColor: 'rgba(56, 189, 248, 0.2)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#334155' } },
+                        x: { grid: { color: '#334155' } }
+                    }
+                }
+            });
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
