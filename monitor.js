@@ -1,88 +1,86 @@
-const https = require('https');
 const axios = require('axios');
 const cron = require('node-cron');
 const db = require('./db');
 
 // --- CONFIGURATION ---
-const NTFY_TOPIC = 'dash-speedtest'; // Change this to your unique topic
-const DOWNLOAD_THRESHOLD = 5; // Alert if speed is below 5 Mbps
+const NTFY_TOPIC = 'dash-speedtest'; // Change name to unique
+const DOWNLOAD_THRESHOLD = 5;
+
+let cronJob = null;
 
 async function measureSpeed() {
-    const url = 'https://speed.cloudflare.com/__down?bytes=1000000'; // 1MB test file
-    let receivedBytes = 0;
-    const startTime = Date.now();
+    console.log(`[${new Date().toLocaleTimeString()}] Starting custom speed test...`);
+    
+    // Download Test (10MB file from Cloudflare)
+    const downloadUrl = 'https://speed.cloudflare.com/__down?bytes=10000000';
+    const downStart = Date.now();
+    const downRes = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
+    const downDuration = (Date.now() - downStart) / 1000;
+    const downloadMbps = (downRes.data.byteLength * 8 / (1000 * 1000) / downDuration).toFixed(2);
 
-    const options = {
-        headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
+    // Upload Test (POST 5MB dummy data)
+    const uploadUrl = 'https://speed.cloudflare.com/__up';
+    const uploadData = Buffer.alloc(5000000, 'x'); // 5MB
+    const upStart = Date.now();
+    await axios.post(uploadUrl, uploadData);
+    const upDuration = (Date.now() - upStart) / 1000;
+    const uploadMbps = (uploadData.length * 8 / (1000 * 1000) / upDuration).toFixed(2);
+
+    return {
+        download: downloadMbps,
+        upload: uploadMbps,
+        isp: 'Cloudflare',
+        server: 'Anycast'
     };
-
-    return new Promise((resolve, reject) => {
-        const req = https.get(url, options, (res) => {
-            if (res.statusCode !== 200) {
-                reject(new Error(`Failed to download: ${res.statusCode}`));
-                return;
-            }
-
-            res.on('data', (chunk) => {
-                receivedBytes += chunk.length;
-            });
-
-            res.on('end', () => {
-                const durationSeconds = (Date.now() - startTime) / 1000;
-                // If duration is 0 (very fast), avoid division by zero
-                const speedMbps = (receivedBytes * 8 / (1000 * 1000) / (durationSeconds || 0.001)).toFixed(2);
-                resolve(speedMbps);
-            });
-        });
-
-        req.on('error', (err) => reject(err));
-        req.setTimeout(20000, () => {
-            req.destroy();
-            reject(new Error('Speed test timed out'));
-        });
-    });
 }
 
-async function runSpeedCheck() {
-    console.log(`[${new Date().toLocaleTimeString()}] Checking speed via Cloudflare (1MB)...`);
+async function runSpeedCheck(isManual = false) {
+    const settings = db.getSettings();
+    if (!settings.enabled && !isManual) {
+        console.log(`[${new Date().toLocaleTimeString()}] Speed check skipped.`);
+        return;
+    }
 
     try {
-        const downloadMbps = await measureSpeed();
-        console.log(`Current Speed: ${downloadMbps} Mbps`);
+        const stats = await measureSpeed();
+        console.log(`Speed: ${stats.download} Mbps down / ${stats.upload} Mbps up`);
 
-        // Save to JSON "database"
-        db.run('', [downloadMbps, 'Cloudflare Speedtest', 'online']);
+        db.run('', [stats.download, stats.isp, 'online', stats.upload]);
 
-        // Only notify if speed is below your threshold
-        if (parseFloat(downloadMbps) < DOWNLOAD_THRESHOLD) {
+        if (parseFloat(stats.download) < DOWNLOAD_THRESHOLD) {
             await axios.post(`https://ntfy.sh/${NTFY_TOPIC}`, 
-                `Speed Alert: Internet speed is ${downloadMbps} Mbps`, 
-                {
-                    headers: { 'Title': 'Internet Speed' }
-                }
+                `Speed Alert: ${stats.download} Mbps down / ${stats.upload} Mbps up`, 
+                { headers: { 'Title': 'Internet Speed Alert' } }
             );
-            console.log('Notification sent to phone.');
         }
+        return stats;
 
     } catch (err) {
         console.error("Speed test failed:", err.message);
-        // Save failure to database
-        db.run('', [0, 'Unknown', 'offline']);
+        db.run('', [0, 'Unknown', 'offline', 0]);
         
         try {
             await axios.post(`https://ntfy.sh/${NTFY_TOPIC}`, `🚨 Connection Issue: ${err.message}`);
-        } catch (notifyErr) {
-            console.error("Failed to send notification:", notifyErr.message);
-        }
+        } catch (notifyErr) {}
+        throw err;
     }
 }
 
-// Set it to run every 30 minutes
-cron.schedule('*/30 * * * *', () => {
-    runSpeedCheck();
-});
+function updateSchedule() {
+    const settings = db.getSettings();
+    if (cronJob) cronJob.stop();
+    
+    cronJob = cron.schedule(`*/${settings.interval} * * * *`, () => {
+        runSpeedCheck();
+    });
+    console.log(`Service scheduled every ${settings.interval} minutes.`);
+}
 
-// Run once immediately when you start the script
-runSpeedCheck();
+updateSchedule();
+
+const initialSettings = db.getSettings();
+if (initialSettings.enabled) {
+    runSpeedCheck();
+}
+
+module.exports = { runSpeedCheck, updateSchedule };

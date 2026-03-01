@@ -70,5 +70,40 @@
     "download": "1.77",
     "isp": "Cloudflare Speedtest",
     "status": "online"
+  },
+  {
+    "timestamp": "2026-02-25T12:04:17.186Z",
+    "download": "3.68",
+    "upload": "3.12",
+    "isp": "Cloudflare",
+    "status": "online"
+  },
+  {
+    "timestamp": "2026-02-25T12:05:30.025Z",
+    "download": "4.35",
+    "upload": "2.71",
+    "isp": "Cloudflare",
+    "status": "online"
+  },
+  {
+    "timestamp": "2026-02-25T12:05:53.333Z",
+    "download": "3.52",
+    "upload": "2.29",
+    "isp": "Cloudflare",
+    "status": "online"
+  },
+  {
+    "timestamp": "2026-02-25T12:11:00.244Z",
+    "download": "0.96",
+    "upload": "2.79",
+    "isp": "Cloudflare",
+    "status": "online"
+  },
+  {
+    "timestamp": "2026-02-25T12:11:16.819Z",
+    "download": "1.98",
+    "upload": "3.92",
+    "isp": "Cloudflare",
+    "status": "online"
   }
 ]
